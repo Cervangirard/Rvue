@@ -1,0 +1,62 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue et R</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2/dist/socket.io.js"></script>
+</head>
+<body>
+    <div id="app">
+        <button id="test" type="button">Check connection !</button>
+        <div v-if= "ready">You'r connect</div>
+        <select id="selected-x" v-model="selectedx">
+          <option>Sepal.Length</option>
+          <option>Petal.Length</option>
+          <option>Sepal.Width</option>
+          </select>
+          <div>
+            <h3>Voici votre graphique :</h3>
+            <p>{{selectedx}}</p>
+            <p v-if="sum!=0">La somme est : {{sum}}</p>
+          </div>
+      </div>
+      <script>
+          var socket = new WebSocket("ws://127.0.0.1:5500");
+          
+
+          console.log(socket);
+
+          var app = new Vue({
+              el: '#app',
+              data: {
+                  selectedx: '',
+                  ready: false,
+                  sum: 0,
+              }
+            
+          });
+          
+          document.getElementById("test").addEventListener("click", ()=>{
+            var msg = {method:"check", message:"ok"};
+            socket.send(JSON.stringify(msg))
+          });
+          
+          document.getElementById("selected-x").addEventListener("change", ()=>{
+            var msg = {method:"graph", message: app.selectedx};
+            socket.send(JSON.stringify(msg))
+          });
+          
+          socket.onmessage = function(event){
+            console.log(event);
+            var msg = JSON.parse(event.data);
+            if(msg.method == "check"){
+              console.log(msg.message);
+              app.ready = true;
+            }else if(msg.method == "graph"){
+              app.sum = msg.message[0]
+            }
+          };
+          
+      </script>
+</body>
+</html>
